@@ -39,4 +39,4 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ghcr.io/AdemErsln/images:${{ matrix.oses }}
+            ghcr.io/ademersln/images:${{ matrix.oses }}
