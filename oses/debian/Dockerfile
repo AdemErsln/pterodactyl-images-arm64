@@ -1,35 +1,42 @@
-FROM debian:buster-slim
+# Ubuntu temel imajı kullan
+FROM ubuntu:20.04
 
-ENV DEBIAN_FRONTEND noninteractive
+# Non-interactive ortam ayarları
+ENV DEBIAN_FRONTEND=noninteractive
 
-## add container user
-RUN useradd -m -d /home/container -s /bin/bash -U container
+# Gerekli paketleri yükle
+RUN apt-get update && apt-get install -y \
+    sudo \
+    curl \
+    wget \
+    git \
+    vim \
+    build-essential \
+    iproute2 \
+    net-tools \
+    netcat \
+    telnet \
+    locales \
+    ffmpeg \
+    ca-certificates \
+    software-properties-common \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-## optionally link nonexistent directory
-RUN ln -s /home/container/ /nonexistent
+# Locale ayarları
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
-ENV USER=container HOME=/home/container
+# Kullanıcı oluştur ve ayarları yap
+RUN useradd -m -d /home/container -s /bin/bash container && \
+    echo "container ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-## update base packages
-RUN apt-get -y update \
-    && apt-get -y upgrade
-
-## install sudo and dependencies
-RUN apt-get -y install sudo gcc g++ libgcc1 libgcc1 libc++-dev gdb libc6 git wget curl tar zip unzip binutils xz-utils liblzo2-2 cabextract iproute2 net-tools netcat telnet libatomic1 libsdl1.2debian libsdl2-2.0-0 \
-    libfontconfig libicu63 icu-devtools libunwind8 libssl-dev sqlite3 libsqlite3-dev libmariadbclient-dev libduktape203 locales ffmpeg gnupg2 apt-transport-https software-properties-common ca-certificates tzdata \
-    liblua5.3 libz-dev rapidjson-dev
-
-## allow container user to run sudo without password
-RUN echo "container ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-## configure locale
-RUN update-locale lang=en_US.UTF-8 \
- && dpkg-reconfigure --frontend noninteractive locales
-
+# Çalışma dizinine geç
 WORKDIR /home/container
 
-COPY ./entrypoint.sh /entrypoint.sh
-
+# Giriş betiğini kopyala
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Başlangıç komutu
 CMD ["/bin/bash", "/entrypoint.sh"]
